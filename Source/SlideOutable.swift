@@ -38,6 +38,7 @@ public class SlideOutable: ClearContainerView {
         // Scroll
         
         scroll.delegate = self
+        scroll.alwaysBounceVertical = true
         scroll.translatesAutoresizingMaskIntoConstraints = true
         scroll.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin]
         scroll.frame = CGRect(x: 0, y: bounds.height - scroll.bounds.height,
