@@ -9,5 +9,5 @@
 import Foundation
 
 public protocol SlideOutableDelegate: class {
-    func slideOutable(_ slideOutable: SlideOutable, stateChanged state: SlideOutable.State)
+    func slideOutable(slideOutable: SlideOutable, stateChanged state: SlideOutable.State)
 }

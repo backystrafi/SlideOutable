@@ -33,21 +33,21 @@ public class SlideOutable: ClearContainerView {
         
         // Setup
         
-        backgroundColor = .clear
+        backgroundColor = .clearColor()
         
         // Scroll
         
         scroll.delegate = self
         scroll.translatesAutoresizingMaskIntoConstraints = true
-        scroll.autoresizingMask = [.flexibleWidth, .flexibleTopMargin]
+        scroll.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin]
         scroll.frame = CGRect(x: 0, y: bounds.height - scroll.bounds.height,
                               width: bounds.width, height: scroll.bounds.height)
-        scroll.keyboardDismissMode = .onDrag
+        scroll.keyboardDismissMode = .OnDrag
         addSubview(scroll)
         
         scroll.panGestureRecognizer.addTarget(self, action: #selector(SlideOutable.didPanScroll(_:)))
         
-        scroll.addObserver(self, forKeyPath: #keyPath(UIScrollView.contentSize), options: .new, context: &scrollContentSizeContext)
+        scroll.addObserver(self, forKeyPath: "contentSize", options: .New, context: &scrollContentSizeContext)
         
         // Header
         
@@ -56,7 +56,7 @@ public class SlideOutable: ClearContainerView {
         assert(header.bounds.height >= 0, "`header` frame size height should be greater than 0")
         
         header.translatesAutoresizingMaskIntoConstraints = true
-        header.autoresizingMask = [.flexibleWidth, .flexibleTopMargin]
+        header.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin]
         header.frame = CGRect(x: 0, y: scroll.frame.minY - header.bounds.height,
                               width: bounds.width, height: header.bounds.height)
         minContentHeight = header.bounds.height
@@ -74,7 +74,7 @@ public class SlideOutable: ClearContainerView {
     }
     
     deinit {
-        scroll.removeObserver(self, forKeyPath: #keyPath(UIScrollView.contentSize), context: &scrollContentSizeContext)
+        scroll.removeObserver(self, forKeyPath: "contentSize", context: &scrollContentSizeContext)
     }
     
     // MARK: - Properties
@@ -160,10 +160,10 @@ public class SlideOutable: ClearContainerView {
     // MARK: - Scroll content size KVO
     
     private var scrollContentSizeContext = 0
-    
-    public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+
+    public override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         guard context == &scrollContentSizeContext else {
-            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+            super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
             return
         }
         guard isScrollStretchable else { return }
@@ -239,7 +239,7 @@ public class SlideOutable: ClearContainerView {
             let scrollingToContentTop = !scrolledToTop && direction == .down
             if scrollingToContentTop {
                 self = .scroll
-            } else if case .settled(let settle) = state, settle == .expanded {
+            } else if case .settled(let settle) = state where settle == .expanded {
                 switch direction {
                 case .up:   self = .scroll
                 case .down: self = .drag
@@ -253,16 +253,16 @@ public class SlideOutable: ClearContainerView {
     func interaction(forDirection direction: Interaction.Direction) -> Interaction {
         return Interaction(direction: direction, in: state, scrolledToTop: scroll.contentOffset.y <= 0)
     }
-    func interaction(scrollView: UIScrollView) -> Interaction {
+    func interaction(scrollView scrollView: UIScrollView) -> Interaction {
         // Enable bouncing
-        if case .settled = state, scrollView.isDecelerating {
+        if case .settled = state where scrollView.decelerating {
             return .scroll
         } else {
             return interaction(forDirection: lastScrollOffset > scrollView.contentOffset.y ? .down : .up)
         }
     }
-    func interaction(pan: UIPanGestureRecognizer) -> Interaction {
-        return interaction(forDirection: pan.velocity(in: pan.view).y > 0 ? .down : .up)
+    func interaction(pan pan: UIPanGestureRecognizer) -> Interaction {
+        return interaction(forDirection: pan.velocityInView(pan.view).y > 0 ? .down : .up)
     }
     
     // MARK: - Updates
@@ -278,10 +278,10 @@ public class SlideOutable: ClearContainerView {
         scroll.frame.size = CGSize(width: bounds.width, height: bounds.height - (header?.bounds.height ?? 0) - topPadding)
     }
     
-    func update(animated: Bool = false, to targetOffset: CGFloat? = nil, velocity: CGFloat? = nil) {
+    func update(animated animated: Bool = false, to targetOffset: CGFloat? = nil, velocity: CGFloat? = nil) {
         let targetOffset = targetOffset ?? currentOffset
         let snapOffsets = [maxOffset, anchorOffset].reduce([minOffset]) { offsets, offset in
-            guard let offset = offset, offset > minOffset else { return offsets }
+            guard let offset = offset where offset > minOffset else { return offsets }
             return offsets + [offset]
         }
         
@@ -299,9 +299,9 @@ public class SlideOutable: ClearContainerView {
         }
         
         // Stop scroll decelerate
-        if scroll.isDecelerating {
+        if scroll.decelerating {
             scroll.stopDecelerating()
-        } else if scroll.isDragging {
+        } else if scroll.dragging {
             isScrollDeceleratingBlocked = true
         }
         
@@ -311,14 +311,14 @@ public class SlideOutable: ClearContainerView {
         scroll.contentInset.bottom += antiBounce
         
         // Animate to new height
-        UIView.animate(withDuration: 0.5, delay: 0,
-                       usingSpringWithDamping: 0.8,
-                       initialSpringVelocity: velocity.flatMap { abs($0 / (currentOffset - offset)) } ?? 1,
-                       options: .curveLinear,
-                       animations: { self.currentOffset = offset },
-                       completion: { _ in
-                        self.updateScrollSize()
-                        self.scroll.contentInset.bottom -= antiBounce
+        UIView.animateWithDuration(0.5, delay: 0,
+                                   usingSpringWithDamping: 0.8,
+                                   initialSpringVelocity: velocity.flatMap { abs($0 / (currentOffset - offset)) } ?? 1,
+                                   options: .CurveLinear,
+                                   animations: { self.currentOffset = offset },
+                                   completion: { _ in
+                                    self.updateScrollSize()
+                                    self.scroll.contentInset.bottom -= antiBounce
         })
     }
 }
@@ -326,7 +326,7 @@ public class SlideOutable: ClearContainerView {
 // MARK: - Scrolling
 
 extension SlideOutable: UIScrollViewDelegate {
-    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    public func scrollViewDidScroll(scrollView: UIScrollView) {
         switch interaction(scrollView: scrollView) {
         case .scroll:
             scrollView.scrollIndicatorInsets.bottom = max(0, scrollView.frame.maxY - bounds.height)
@@ -343,7 +343,7 @@ extension SlideOutable: UIScrollViewDelegate {
             scrollView.contentOffset.y = lastScrollOffset
         }
     }
-    public func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+    public func scrollViewWillBeginDecelerating(scrollView: UIScrollView) {
         guard isScrollDeceleratingBlocked else { return }
         isScrollDeceleratingBlocked = false
         scrollView.stopDecelerating()
@@ -367,17 +367,17 @@ extension SlideOutable {
         return (offset, offset - targetOffset)
     }
     
-    func didPanDrag(_ pan: UIPanGestureRecognizer) {
-        let dragOffset = pan.translation(in: pan.view).y
+    func didPanDrag(pan: UIPanGestureRecognizer) {
+        let dragOffset = pan.translationInView(pan.view).y
         var diff = lastDragOffset - dragOffset
         
         let isScrollPan = scroll.panGestureRecognizer == pan
         
         switch pan.state {
-        case .began where !isScrollPan:
+        case .Began where !isScrollPan:
             scroll.panGestureRecognizer.stopCurrentGesture()
             
-        case .changed:
+        case .Changed:
             // If starts dragging while scroll is in a bounce
             if lastScrollOffset < 0 {
                 if isScrollPan {
@@ -391,11 +391,11 @@ extension SlideOutable {
             currentOffset = offset.value
             
             // Accounts for clipped pan switching from .drag to .scroll
-            guard offset.clipped != 0, isScrollPan else { break }
+            guard offset.clipped != 0 && isScrollPan else { break }
             scroll.contentOffset.y += offset.clipped
             
-        case .ended:
-            let velocity = pan.velocity(in: pan.view).y
+        case .Ended:
+            let velocity = pan.velocityInView(pan.view).y
             let targetOffset = currentOffset - diff + 0.2 * velocity
             update(animated: true, to: targetOffset, velocity: velocity)
         default: break
@@ -404,15 +404,15 @@ extension SlideOutable {
         lastDragOffset = dragOffset
     }
     
-    func didPanScroll(_ pan: UIPanGestureRecognizer) {
-        if pan.state == .began {
+    func didPanScroll(pan: UIPanGestureRecognizer) {
+        if pan.state == .Began {
             header?.gestureRecognizers?.first?.stopCurrentGesture()
         }
         
         switch interaction(pan: pan) {
         case .scroll:
-            lastDragOffset = pan.translation(in: pan.view).y
-            guard pan.state == .ended, case .dragging = state else { break }
+            lastDragOffset = pan.translationInView(pan.view).y
+            guard pan.state == .Ended, case .dragging = state else { break }
             didPanDrag(pan)
             
         case .drag:
@@ -423,10 +423,10 @@ extension SlideOutable {
 
 extension UIGestureRecognizer {
     func stopCurrentGesture() {
-        isEnabled = !isEnabled
-        isEnabled = !isEnabled
+        enabled = !enabled
+        enabled = !enabled
     }
     var isActive: Bool {
-        return [.began, .changed].contains(state)
+        return [.Began, .Changed].contains(state)
     }
 }
