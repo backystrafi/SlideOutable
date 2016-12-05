@@ -375,8 +375,8 @@ extension UIScrollView {
 }
 
 extension SlideOutable {
-    func didPanScroll(_ pan: UIPanGestureRecognizer) {
-        if pan.state == .began {
+    func didPanScroll(pan: UIPanGestureRecognizer) {
+        if pan.state == .Began {
             header?.gestureRecognizers?.first?.stopCurrentGesture()
         }
         
@@ -387,9 +387,9 @@ extension SlideOutable {
             scroll.showsVerticalScrollIndicator = true
             
             lastScrollOffset = scroll.contentOffset.y
-            lastDragOffset = pan.translation(in: pan.view).y
+            lastDragOffset = pan.translationInView(pan.view).y
             
-            guard pan.state == .ended, case .dragging = state else { break }
+            guard pan.state == .Ended, case .dragging = state else { break }
             didPanDrag(pan)
             
         case .drag:
