@@ -25,7 +25,7 @@ class ViewController: UIViewController {
         container.delegate = self
         container.topPadding = 44
         
-        container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        container.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         view.addSubview(container)
     }
     
@@ -33,7 +33,7 @@ class ViewController: UIViewController {
 }
 
 extension ViewController: SlideOutableDelegate {
-    func slideOutable(_ slideOutable: SlideOutable, stateChanged state: SlideOutable.State) {
+    func slideOutable(slideOutable: SlideOutable, stateChanged state: SlideOutable.State) {
         let alpha: CGFloat
         switch state {
         case .settled(let position):
@@ -52,20 +52,20 @@ extension ViewController: SlideOutableDelegate {
 }
 
 extension ViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return cells.count
     }
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath)
         cell.textLabel?.text = cells[indexPath.row]
         return cell
     }
 }
 
 extension ViewController: UISearchBarDelegate {
-    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut,
-                       animations: { self.container.set(state: .expanded) },
-                       completion: nil)
+    func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
+        UIView.animateWithDuration(0.3, delay: 0, options: .CurveEaseOut,
+                                   animations: { self.container.set(state: .expanded) },
+                                   completion: nil)
     }
 }
