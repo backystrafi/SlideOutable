@@ -48,7 +48,6 @@ public class SlideOutable: ClearContainerView {
         // Scroll
         
         scroll.removeFromSuperview()
-        scroll.constraints.forEach { scroll.removeConstraint($0) }
         scroll.translatesAutoresizingMaskIntoConstraints = true
         scroll.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin]
         scroll.frame = CGRect(x: 0, y: bounds.height - scroll.bounds.height,
@@ -73,7 +72,6 @@ public class SlideOutable: ClearContainerView {
         assert(header.bounds.height >= 0, "`header` frame size height should be greater than 0")
         
         header.removeFromSuperview()
-        header.constraints.forEach { header.removeConstraint($0) }
         header.translatesAutoresizingMaskIntoConstraints = true
         header.autoresizingMask = [.FlexibleWidth, .FlexibleTopMargin]
         header.frame = CGRect(x: 0, y: scroll.frame.minY - header.bounds.height,
