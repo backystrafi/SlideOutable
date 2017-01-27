@@ -66,7 +66,9 @@ public class SlideOutable: ClearContainerView {
         
         scroll.panGestureRecognizer.addTarget(self, action: #selector(SlideOutable.didPanScroll(_:)))
         
-        scroll.addObserver(self, forKeyPath: "contentSize", options: .New, context: &scrollContentSizeContext)
+
+        scroll.addObserver(self, forKeyPath: "contentSize", options: .New, context: &scrollContentContext)
+        scroll.addObserver(self, forKeyPath: "contentOffset", options: .New, context: &scrollContentContext)
         
         defer {
             updateScrollSize()
@@ -91,7 +93,8 @@ public class SlideOutable: ClearContainerView {
     }
     
     deinit {
-        scroll.removeObserver(self, forKeyPath: "contentSize", context: &scrollContentSizeContext)
+        scroll.removeObserver(self, forKeyPath: "contentSize", context: &scrollContentContext)
+        scroll.removeObserver(self, forKeyPath: "contentOffset", context: &scrollContentContext)
     }
     
     // MARK: - Properties
@@ -205,15 +208,24 @@ public class SlideOutable: ClearContainerView {
     
     // MARK: - Scroll content size KVO
     
-    private var scrollContentSizeContext = 0
+    private var scrollContentContext = 0
 
     public override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-        guard context == &scrollContentSizeContext else {
+        guard context == &scrollContentContext else {
             super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
             return
         }
-        guard !isScrollStretchable else { return }
-        update()
+        guard let keyPath = keyPath else { return }
+        switch keyPath {
+        case "contentOffset":
+            guard lastScrollOffset != scroll.contentOffset.y else { return }
+            scrollViewDidScroll(scroll)
+        case "contentSize":
+            guard !isScrollStretchable else { return }
+            update()
+        default:
+            break
+        }
     }
     
     // MARK: - State
@@ -394,6 +406,26 @@ public class SlideOutable: ClearContainerView {
 
 // MARK: - Scrolling
 
+extension SlideOutable {
+    private func scrollViewDidScroll(scrollView: UIScrollView) {
+        switch interaction(scrollView: scrollView) {
+        case .scroll:
+            scrollView.scrollIndicatorInsets.bottom = max(0, scrollView.frame.maxY - bounds.height)
+            scrollView.showsVerticalScrollIndicator = true
+            lastScrollOffset = scrollView.contentOffset.y
+        case .drag:
+            if lastScrollOffset > 0 && 0 > scrollView.contentOffset.y {
+                // Accounts for missed content offset switching from .scroll to .drag
+                lastDragOffset += lastScrollOffset
+                
+                lastScrollOffset = 0
+            }
+            scrollView.showsVerticalScrollIndicator = false
+            scrollView.contentOffset.y = lastScrollOffset
+        }
+    }
+}
+
 extension UIScrollView {
     func stopDecelerating() {
         setContentOffset(contentOffset, animated: false)
@@ -408,26 +440,12 @@ extension SlideOutable {
         
         switch interaction(pan: pan) {
         case .scroll:
-            
-            scroll.scrollIndicatorInsets.bottom = max(0, scroll.frame.maxY - bounds.height)
-            scroll.showsVerticalScrollIndicator = true
-            
-            lastScrollOffset = scroll.contentOffset.y
             lastDragOffset = pan.translationInView(pan.view).y
             
             guard pan.state == .Ended, case .dragging = state else { break }
             didPanDrag(pan)
             
         case .drag:
-            if lastScrollOffset > 0 && 0 > scroll.contentOffset.y {
-                // Accounts for missed content offset switching from .scroll to .drag
-                lastDragOffset += lastScrollOffset
-                
-                lastScrollOffset = 0
-            }
-            scroll.showsVerticalScrollIndicator = false
-            scroll.contentOffset.y = lastScrollOffset
-            
             // Forwards interaction
             didPanDrag(pan)
         }
