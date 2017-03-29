@@ -93,8 +93,8 @@ public class SlideOutable: ClearContainerView {
     }
     
     deinit {
-        scroll.removeObserver(self, forKeyPath: "contentSize", context: &scrollContentContext)
-        scroll.removeObserver(self, forKeyPath: "contentOffset", context: &scrollContentContext)
+        scroll?.removeObserver(self, forKeyPath: "contentSize", context: &scrollContentContext)
+        scroll?.removeObserver(self, forKeyPath: "contentOffset", context: &scrollContentContext)
     }
     
     // MARK: - Properties
